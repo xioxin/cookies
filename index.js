@@ -88,8 +88,8 @@ Cookies.prototype.set = function(name, value, opts) {
     , cookie = new Cookie(name, value, opts)
     , signed = opts && opts.signed !== undefined ? opts.signed : !!this.keys
 
-  if(cookie.sameSite == 'none' && disallowsSameSiteNone(this.request.headers['user-agent'])) {
-    cookie.sameSite = false;
+  if(typeof cookie.sameSite === 'string' && cookie.sameSite.toLowerCase() == 'none' && disallowsSameSiteNone(this.request.headers['user-agent'])) {
+    cookie.sameSite = false
   }
 
   if (typeof headers == "string") headers = [headers]
