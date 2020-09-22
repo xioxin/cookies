@@ -244,7 +244,7 @@ function disallowsSameSiteNone(userAgent) {
     // and none in this range require it.
     // Note: this covers some pre-Chromium Edge versions, 
     // but pre-Chromium Edge does not require SameSite=None.
-    if (userAgent.indexOf("Chrome/5") != -1 || userAgent.Contains("Chrome/6") != -1)
+    if (userAgent.indexOf("Chrome/5") != -1 || userAgent.indexOf("Chrome/6") != -1)
     {
         return true;
     }
