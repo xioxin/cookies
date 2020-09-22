@@ -34,7 +34,7 @@ function Cookies(request, response, options) {
   this.secure = undefined
   this.request = request
   this.response = response
-
+  
   if (options) {
     if (Array.isArray(options)) {
       // array of key strings
@@ -87,6 +87,10 @@ Cookies.prototype.set = function(name, value, opts) {
     , secure = this.secure !== undefined ? !!this.secure : req.protocol === 'https' || req.connection.encrypted
     , cookie = new Cookie(name, value, opts)
     , signed = opts && opts.signed !== undefined ? opts.signed : !!this.keys
+
+  if(cookie.sameSite == 'none' && disallowsSameSiteNone(this.request.headers['user-agent'])) {
+    cookie.sameSite = false;
+  }
 
   if (typeof headers == "string") headers = [headers]
 
@@ -207,6 +211,44 @@ function pushCookie(headers, cookie) {
   }
 
   headers.push(cookie.toHeader())
+}
+
+function disallowsSameSiteNone(userAgent) {
+    if (!userAgent) return false;
+
+    // Cover all iOS based browsers here. This includes:
+    // - Safari on iOS 12 for iPhone, iPod Touch, iPad
+    // - WkWebview on iOS 12 for iPhone, iPod Touch, iPad
+    // - Chrome on iOS 12 for iPhone, iPod Touch, iPad
+    // All of which are broken by SameSite=None, because they use the iOS networking
+    // stack.
+    if (userAgent.indexOf("CPU iPhone OS 12") != -1 ||
+        userAgent.indexOf("iPad; CPU OS 12") != -1 )
+    {
+        return true;
+    }
+
+    // Cover Mac OS X based browsers that use the Mac OS networking stack. 
+    // This includes:
+    // - Safari on Mac OS X.
+    // This does not include:
+    // - Chrome on Mac OS X
+    // Because they do not use the Mac OS networking stack.
+    if (userAgent.indexOf("Macintosh; Intel Mac OS X 10_14") != -1 &&
+        userAgent.indexOf("Version/") != -1 && userAgent.indexOf("Safari") != -1)
+    {
+        return true;
+    }
+
+    // Cover Chrome 50-69, because some versions are broken by SameSite=None, 
+    // and none in this range require it.
+    // Note: this covers some pre-Chromium Edge versions, 
+    // but pre-Chromium Edge does not require SameSite=None.
+    if (userAgent.indexOf("Chrome/5") != -1 || userAgent.Contains("Chrome/6") != -1)
+    {
+        return true;
+    }
+    return false;
 }
 
 Cookies.connect = Cookies.express = function(keys) {
